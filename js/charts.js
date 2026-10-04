@@ -21,17 +21,17 @@
     const total = items.reduce((a, b) => a + b.value, 0);
     const size = 150, c = size / 2, r1 = 72, r0 = 46;
     let a = 0;
-    const segs = items.filter(i => i.value > 0).map(i => {
+    const segs = items.filter(i => i.value > 0).map((i, n) => {
       const frac = i.value / total;
       const a0 = a, a1 = a + frac * Math.PI * 2;
       a = a1;
       const tip = `<b>${esc(i.label)}</b><br>${money(i.value)} · ${(frac * 100).toFixed(1).replace('.', ',')} %`;
       if (frac >= 0.9999) {
-        return `<g data-tip="${esc(tip)}"><circle cx="${c}" cy="${c}" r="${(r0 + r1) / 2}" fill="none" stroke="${i.color}" stroke-width="${r1 - r0}"/></g>`;
+        return `<g data-tip="${esc(tip)}" class="arc" style="--i:${n}"><circle cx="${c}" cy="${c}" r="${(r0 + r1) / 2}" fill="none" stroke="${i.color}" stroke-width="${r1 - r0}"/></g>`;
       }
-      return `<path d="${arc(c, c, r0, r1, a0, a1)}" fill="${i.color}" stroke="var(--card)" stroke-width="2" stroke-linejoin="round" data-tip="${esc(tip)}"/>`;
+      return `<path class="arc" style="--i:${n}" d="${arc(c, c, r0, r1, a0, a1)}" fill="${i.color}" stroke="var(--card)" stroke-width="2" stroke-linejoin="round" data-tip="${esc(tip)}"/>`;
     }).join('');
-    return `<div class="chart"><svg viewBox="0 0 ${size} ${size}" role="img" aria-label="${esc(center.aria || '')}">
+    return `<div class="chart chart--donut"><svg viewBox="0 0 ${size} ${size}" role="img" aria-label="${esc(center.aria || '')}">
       ${segs}
       <text x="${c}" y="${c - 4}" text-anchor="middle" style="font-size:10px;letter-spacing:.1em">${esc(center.label)}</text>
       <text x="${c}" y="${c + 14}" text-anchor="middle" class="donut-center" style="font-size:15px;fill:var(--ink)">${esc(center.value)}</text>
@@ -62,10 +62,10 @@
       `<text x="${padL - 6}" y="${y(t) + 4}" text-anchor="end">${esc(moneyShort(t))}</text>`).join('');
 
     // Barra con extremo superior redondeado (4px) anclada a la base
-    const bar = (x, v, color) => {
+    const bar = (x, v, color, i) => {
       if (v <= 0) return '';
       const top = y(v), h = padT + ih - top, r = Math.min(4, h, bw / 2);
-      return `<path d="M${x} ${padT + ih}V${top + r}Q${x} ${top} ${x + r} ${top}H${x + bw - r}Q${x + bw} ${top} ${x + bw} ${top + r}V${padT + ih}Z" fill="${color}"/>`;
+      return `<path class="bar" style="--i:${i}" d="M${x} ${padT + ih}V${top + r}Q${x} ${top} ${x + r} ${top}H${x + bw - r}Q${x + bw} ${top} ${x + bw} ${top + r}V${padT + ih}Z" fill="${color}"/>`;
     };
 
     const bars = rows.map((r, i) => {
@@ -77,7 +77,7 @@
       const showLbl = rows.length <= 6 || i % 2 === (rows.length - 1) % 2;
       return `<g data-tip="${esc(tip)}" data-i="${i}">
         <rect class="hit" x="${padL + step * i}" y="${padT}" width="${step}" height="${ih + padB}"/>
-        ${bar(x1, r.ing, 'var(--c-ing)')}${bar(x2, r.gas, 'var(--c-gas)')}
+        ${bar(x1, r.ing, 'var(--c-ing)', i)}${bar(x2, r.gas, 'var(--c-gas)', i)}
         ${showLbl ? `<text x="${cx}" y="${H - 8}" text-anchor="middle"${r.mk === opts.current ? ' style="fill:var(--ink);font-weight:700"' : ''}>${esc(lbl)}</text>` : ''}
       </g>`;
     }).join('');

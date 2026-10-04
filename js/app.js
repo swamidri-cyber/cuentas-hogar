@@ -121,12 +121,17 @@
   const dlgStack = [];
   let ignorePop = 0;
   function openDlg(d) {
-    if (d.open) return;
+    // si se está cerrando (animación), espera a que termine y lo vuelve a abrir
+    if (d.classList.contains('closing')) {
+      return new Promise(r => d.addEventListener('close', () => setTimeout(() => { openDlg(d); r(); }, 0), { once: true }));
+    }
+    if (d.open) return Promise.resolve();
     d.showModal();
     dlgStack.push(d);
     history.pushState({ dlg: dlgStack.length }, '');
+    return Promise.resolve();
   }
-  function closeDlg(d) { if (d.open) d.close(); }
+  function closeDlg(d) { Motion.closeAnimated(d); }
   $$('dialog').forEach(d => {
     d.addEventListener('close', () => {
       const i = dlgStack.lastIndexOf(d);
@@ -149,7 +154,7 @@
   window.addEventListener('popstate', () => {
     if (ignorePop) { ignorePop--; return; }
     const top = dlgStack.pop();
-    if (top && top.open) top.close();
+    if (top && top.open) closeDlg(top);
   });
 
   function confirmBox(title, text, okLabel, danger) {
@@ -159,8 +164,7 @@
     const ok = $('#dlgConfirmOk');
     ok.textContent = okLabel || 'Sí, borrar';
     ok.className = 'btn ' + (danger === false ? 'btn--primary' : 'btn--danger');
-    openDlg(d);
-    return new Promise(res => {
+    return openDlg(d).then(() => new Promise(res => {
       let done = false;
       const finish = v => {
         if (done) return;
@@ -173,7 +177,7 @@
       ok.onclick = e => { e.preventDefault(); finish(true); };
       cancel.onclick = e => { e.preventDefault(); finish(false); };
       d.addEventListener('close', () => finish(false), { once: true });
-    });
+    }));
   }
 
   /* ---------------- Toast ---------------- */
@@ -204,14 +208,23 @@
   const VIEWS = ['inicio', 'movs', 'resumen', 'ajustes'];
   function go(view) {
     if (!VIEWS.includes(view)) view = 'inicio';
+    const dir = Math.sign(VIEWS.indexOf(view) - VIEWS.indexOf(S.view));
+    const first = !go.done;
+    go.done = true;
     S.view = view;
+    $('.tabs').style.setProperty('--tab', VIEWS.indexOf(view));
     VIEWS.forEach(v => { $('#view-' + v).hidden = v !== view; });
     $$('.tabs a').forEach(a => a.toggleAttribute('aria-current', a.dataset.view === view));
     $$('.tabs a').forEach(a => { if (a.dataset.view === view) a.setAttribute('aria-current', 'page'); });
     $('#viewTitle').textContent = $('#view-' + view).dataset.title;
     render();
     window.scrollTo(0, 0);
+    const sec = $('#view-' + view);
+    if (!first) Motion.enter(sec, dir);
+    Motion.stagger(sec.querySelector('#' + view + 'Body') || $('#movsList'));
   }
+  const canSwipe = dir => { const i = VIEWS.indexOf(S.view) + dir; return i >= 0 && i < VIEWS.length; };
+  function swipeTab(dir) { if (canSwipe(dir)) location.hash = '#' + VIEWS[VIEWS.indexOf(S.view) + dir]; }
   window.addEventListener('hashchange', () => go(location.hash.slice(1)));
 
   function render() {
@@ -233,6 +246,9 @@
       const n = addMonths(mk, +b.dataset.d);
       if (n > cur) return;
       onChange(n);
+      const body = el.nextElementSibling && el.nextElementSibling.matches('.switch') ? el.parentElement.querySelector('[id$="Body"]') : el.nextElementSibling;
+      Motion.enter(body, +b.dataset.d);
+      Motion.enter(el.querySelector('.month-nav__label'), +b.dataset.d);
     });
   }
 
@@ -296,11 +312,11 @@
       <div class="hero">
         <span class="mark m-espiral hero__deco" aria-hidden="true"></span>
         <p class="eyebrow">Balance del mes</p>
-        <p class="hero__value num">${money(bal)}</p>
+        <p class="hero__value num" data-count="${bal}" data-key="bal">${money(bal)}</p>
         <p class="hero__sub">Saldo acumulado: <b class="num">${money(saldoHasta(mk))}</b></p>
         <div class="hero__split">
-          <div><span class="lbl"><i class="dot" style="background:var(--c-ing)"></i>Ingresos</span><span class="val num">${money(ing)}</span></div>
-          <div><span class="lbl"><i class="dot" style="background:var(--c-gas)"></i>Gastos</span><span class="val num">${money(gas)}</span></div>
+          <div><span class="lbl"><i class="dot" style="background:var(--c-ing)"></i>Ingresos</span><span class="val num" data-count="${ing}" data-key="ing">${money(ing)}</span></div>
+          <div><span class="lbl"><i class="dot" style="background:var(--c-gas)"></i>Gastos</span><span class="val num" data-count="${gas}" data-key="gas">${money(gas)}</span></div>
         </div>
       </div>`;
 
@@ -347,6 +363,7 @@
     h += last.length ? last.map(movRow).join('') : `<p class="muted small">No hay movimientos en ${esc(monthName(mk))}.</p>`;
     h += '</div>';
     body.innerHTML = h;
+    Motion.counters(body);
   }
 
   function budgetRow(b) {
@@ -371,12 +388,12 @@
     const meta = [m.desc ? name : null, medioName(m.medio)].filter(Boolean).join(' · ');
     const tag = !ingreso && m.ambito === 'emprendimiento' ? ' <span class="tag">emprend.</span>' : '';
     const fijo = m.fijoId ? ' <span class="tag">fijo</span>' : '';
-    return `<button type="button" class="mov" data-act="edit-mov" data-id="${m.id}">
+    return `<div class="mov-wrap"><span class="mov__bg" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>Borrar</span><button type="button" class="mov" data-act="edit-mov" data-id="${m.id}">
       <span class="mov__icon mov__icon--${m.tipo}" aria-hidden="true">${ingreso ? '+' : '−'}</span>
       <span class="mov__main"><span class="mov__title" style="display:block">${esc(title)}</span>
       <span class="mov__meta" style="display:block">${esc(meta)}${tag}${fijo}</span></span>
       <span class="mov__amt num ${ingreso ? 'pos' : 'neg'}">${ingreso ? '+' : '−'}${money(m.monto).replace('−', '')}</span>
-    </button>`;
+    </button></div>`;
   }
 
   /* ================= MOVIMIENTOS ================= */
@@ -763,6 +780,21 @@
     }
   });
 
+  /** Deslizar un movimiento hacia la izquierda: pide confirmación y lo borra */
+  async function swipeDelete(id, row) {
+    const m = S.movs.find(x => x.id === id);
+    if (!m) return false;
+    const ok = await confirmBox('¿Borrar este movimiento?', `${m.tipo === 'ingreso' ? 'Ingreso' : 'Gasto'} de ${money(m.monto)} del ${dmy(m.fecha)}${m.desc ? ' (' + m.desc + ')' : ''}.`);
+    if (!ok) return false;
+    const copy = Object.assign({}, m);
+    const day = row.parentElement;
+    await Motion.collapseOut(row);
+    if (day && day.classList.contains('day') && day.querySelectorAll('.mov-wrap').length === 1) await Motion.collapseOut(day);
+    await removeMov(id);
+    toast('Movimiento borrado', { label: 'Deshacer', fn: async () => { await DB.putMov(copy); S.movs.push(copy); render(); } });
+    return true;
+  }
+
   async function removeMov(id) {
     await DB.deleteMov(id);
     S.movs = S.movs.filter(m => m.id !== id);
@@ -1142,6 +1174,7 @@
   async function init() {
     await load();
     DB.persist();
+    Motion.init({ canSwipe, onSwipeTab: swipeTab, onRowDelete: swipeDelete, onSheetClose: closeDlg });
     go(location.hash.slice(1) || 'inicio');
     // Atajo del ícono instalado: "Cargar movimiento"
     if (new URLSearchParams(location.search).has('nuevo')) {

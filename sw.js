@@ -1,6 +1,6 @@
 /* Service worker: guarda la app en el celular para que funcione sin internet.
    Al cambiar archivos, subí el número de VERSION para que se actualice. */
-const VERSION = 'cuentas-v1';
+const VERSION = 'cuentas-v2';
 const FILES = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const FILES = [
   './js/format.js',
   './js/db.js',
   './js/charts.js',
+  './js/motion.js',
   './js/app.js',
   './fonts/josefin-sans.woff2',
   './fonts/im-fell-english.woff2',
