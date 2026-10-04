@@ -1,0 +1,22 @@
+{
+  "name": "Cuentas del hogar · La que dió el mal paso",
+  "short_name": "Cuentas",
+  "description": "Ingresos, gastos y resumen del hogar y del emprendimiento. Todo queda guardado en el celular.",
+  "lang": "es-AR",
+  "id": "./",
+  "start_url": "./#inicio",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#efebe0",
+  "theme_color": "#efebe0",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Cargar movimiento", "short_name": "Cargar", "url": "./?nuevo=1#inicio", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

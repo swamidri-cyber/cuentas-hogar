@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Cuentas del hogar</title>
+  <meta name="description" content="Economía del hogar y del emprendimiento. Todo queda guardado en tu celular.">
+  <meta name="theme-color" content="#efebe0" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#22221b" media="(prefers-color-scheme: dark)">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="icons/favicon-64.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Cuentas">
+  <link rel="preload" href="fonts/josefin-sans.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Saltar al contenido</a>
+
+  <header class="top">
+    <div class="top__brand">
+      <span class="mark m-isotipo" aria-hidden="true"></span>
+      <div>
+        <p class="top__kicker">La que dió el mal paso</p>
+        <h1 class="top__title" id="viewTitle">Inicio</h1>
+      </div>
+    </div>
+    <button class="icon-btn" id="btnTheme" type="button" aria-label="Cambiar tema claro u oscuro">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg>
+    </button>
+  </header>
+
+  <div id="banners" class="wrap"></div>
+
+  <main id="main" class="wrap" tabindex="-1">
+    <!-- INICIO -->
+    <section class="view" id="view-inicio" data-title="Inicio" aria-labelledby="viewTitle">
+      <div class="month-nav" data-month-nav="inicio"></div>
+      <div id="inicioBody"></div>
+    </section>
+
+    <!-- MOVIMIENTOS -->
+    <section class="view" id="view-movs" data-title="Movimientos" hidden>
+      <div class="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input type="search" id="q" placeholder="Buscar por descripción, monto…" aria-label="Buscar movimientos" autocomplete="off">
+      </div>
+      <div class="seg" role="radiogroup" aria-label="Tipo de movimiento" id="fTipo">
+        <button type="button" role="radio" aria-checked="true" data-v="">Todos</button>
+        <button type="button" role="radio" aria-checked="false" data-v="ingreso">Ingresos</button>
+        <button type="button" role="radio" aria-checked="false" data-v="gasto">Gastos</button>
+      </div>
+      <details class="filters" id="filtersBox">
+        <summary>Filtros <span class="filters__count" id="filtersCount"></span></summary>
+        <div class="filters__grid">
+          <label class="field">
+            <span>Período</span>
+            <select id="fPeriodo">
+              <option value="mes">Un mes</option>
+              <option value="rango">Rango de fechas</option>
+              <option value="todo">Todo</option>
+            </select>
+          </label>
+          <label class="field" data-show="mes">
+            <span>Mes</span>
+            <input type="month" id="fMes">
+          </label>
+          <label class="field" data-show="rango">
+            <span>Desde</span>
+            <input type="date" id="fDesde">
+          </label>
+          <label class="field" data-show="rango">
+            <span>Hasta</span>
+            <input type="date" id="fHasta">
+          </label>
+          <label class="field">
+            <span>Fuente de ingreso</span>
+            <select id="fFuente"></select>
+          </label>
+          <label class="field">
+            <span>Categoría de gasto</span>
+            <select id="fCategoria"></select>
+          </label>
+          <label class="field">
+            <span>Hogar o emprendimiento</span>
+            <select id="fAmbito">
+              <option value="">Ambos</option>
+              <option value="hogar">Hogar</option>
+              <option value="emprendimiento">Emprendimiento</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Medio</span>
+            <select id="fMedio"></select>
+          </label>
+        </div>
+        <div class="row-actions">
+          <button type="button" class="btn btn--ghost" id="btnClearFilters">Limpiar filtros</button>
+          <button type="button" class="btn btn--ghost" id="btnCsvFiltered">Exportar esto a Excel</button>
+        </div>
+      </details>
+      <div id="movsTotals" class="totals"></div>
+      <div id="movsList" class="list"></div>
+    </section>
+
+    <!-- RESUMEN -->
+    <section class="view" id="view-resumen" data-title="Resumen" hidden>
+      <div class="month-nav" data-month-nav="resumen"></div>
+      <label class="switch">
+        <input type="checkbox" id="chkInfl">
+        <span class="switch__ui" aria-hidden="true"></span>
+        <span>Ver en pesos de hoy (ajustado por inflación)</span>
+      </label>
+      <div id="resumenBody"></div>
+    </section>
+
+    <!-- AJUSTES -->
+    <section class="view" id="view-ajustes" data-title="Ajustes" hidden>
+      <div id="ajustesBody"></div>
+    </section>
+  </main>
+
+  <button class="fab" id="fab" type="button" aria-label="Cargar movimiento nuevo">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+
+  <nav class="tabs" aria-label="Secciones">
+    <a href="#inicio" data-view="inicio" aria-current="page">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/></svg>
+      <span>Inicio</span>
+    </a>
+    <a href="#movs" data-view="movs">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+      <span>Movimientos</span>
+    </a>
+    <a href="#resumen" data-view="resumen">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>
+      <span>Resumen</span>
+    </a>
+    <a href="#ajustes" data-view="ajustes">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>
+      <span>Ajustes</span>
+    </a>
+  </nav>
+
+  <!-- Hoja para cargar / editar movimiento -->
+  <dialog class="sheet" id="sheetMov" aria-labelledby="sheetMovTitle">
+    <form method="dialog" id="formMov" novalidate>
+      <div class="sheet__head">
+        <h2 id="sheetMovTitle">Nuevo movimiento</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+
+      <div class="seg seg--big" role="radiogroup" aria-label="Tipo" id="mTipo">
+        <button type="button" role="radio" aria-checked="false" data-v="ingreso">Ingreso</button>
+        <button type="button" role="radio" aria-checked="true" data-v="gasto">Gasto</button>
+      </div>
+
+      <label class="amount">
+        <span class="sr">Monto</span>
+        <span class="amount__sign" aria-hidden="true">$</span>
+        <input id="mMonto" inputmode="decimal" autocomplete="off" placeholder="0" enterkeyhint="done" required>
+      </label>
+      <p class="hint" id="mMontoHint" aria-live="polite"></p>
+
+      <fieldset class="chips-field">
+        <legend id="mCatLegend">Categoría</legend>
+        <div class="chips" id="mCats"></div>
+      </fieldset>
+
+      <fieldset class="chips-field" id="mAmbitoBox">
+        <legend>¿De qué es?</legend>
+        <div class="seg" role="radiogroup" aria-label="Hogar o emprendimiento" id="mAmbito">
+          <button type="button" role="radio" aria-checked="true" data-v="hogar">Hogar</button>
+          <button type="button" role="radio" aria-checked="false" data-v="emprendimiento">Emprendimiento</button>
+        </div>
+      </fieldset>
+
+      <fieldset class="chips-field">
+        <legend>Medio</legend>
+        <div class="chips chips--small" id="mMedios"></div>
+      </fieldset>
+
+      <div class="grid2">
+        <label class="field">
+          <span>Fecha</span>
+          <input type="date" id="mFecha" required>
+        </label>
+        <label class="field">
+          <span>Descripción</span>
+          <input type="text" id="mDesc" maxlength="120" placeholder="Opcional" autocomplete="off" list="descSugeridas">
+        </label>
+      </div>
+      <datalist id="descSugeridas"></datalist>
+
+      <label class="check" id="mRepetirBox">
+        <input type="checkbox" id="mRepetir">
+        <span>Se repite todos los meses (fijo)</span>
+      </label>
+
+      <div class="sheet__actions">
+        <button type="button" class="btn btn--danger-ghost" id="btnDeleteMov" hidden>Borrar</button>
+        <button type="submit" class="btn btn--primary btn--wide" id="btnSaveMov">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Confirmación -->
+  <dialog class="modal" id="dlgConfirm" aria-labelledby="dlgConfirmTitle">
+    <form method="dialog">
+      <h2 id="dlgConfirmTitle">¿Seguro?</h2>
+      <p id="dlgConfirmText"></p>
+      <div class="modal__actions">
+        <button class="btn btn--ghost" value="cancel">Cancelar</button>
+        <button class="btn btn--danger" value="ok" id="dlgConfirmOk">Sí, borrar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Diálogo genérico (editar fuente, categoría, fijo…) -->
+  <dialog class="sheet" id="dlgEdit" aria-labelledby="dlgEditTitle">
+    <form method="dialog" id="formEdit" novalidate>
+      <div class="sheet__head">
+        <h2 id="dlgEditTitle"></h2>
+        <button class="icon-btn" type="button" data-close aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <div id="dlgEditBody"></div>
+      <div class="sheet__actions" id="dlgEditActions"></div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <input type="file" id="fileImport" accept="application/json,.json" hidden>
+
+  <script src="js/format.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
