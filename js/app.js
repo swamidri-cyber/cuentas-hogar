@@ -8,12 +8,14 @@
 
   const BACKUP_DAYS = 14;
 
-  /* ---------------- Valores iniciales ---------------- */
+  /* ---------------- Valores iniciales ----------------
+     Sólo se usan la primera vez que se abre la app: quien ya la usó
+     tiene sus listas guardadas en el celular y no cambian. */
   const DEF_FUENTES = [
-    { id: 'f-peluqueria', nombre: 'Peluquería' },
-    { id: 'f-insumos', nombre: 'Venta de insumos' },
-    { id: 'f-cursos', nombre: 'Cursos' },
-    { id: 'f-feria', nombre: 'Sahumerios en la feria' }
+    { id: 'f-sueldo', nombre: 'Sueldo' },
+    { id: 'f-ventas', nombre: 'Ventas' },
+    { id: 'f-servicios', nombre: 'Trabajos y servicios' },
+    { id: 'f-otros', nombre: 'Otros ingresos' }
   ];
   const DEF_CATEGORIAS = [
     { id: 'c-alquiler', nombre: 'Alquiler', ambito: 'hogar' },
